@@ -3,6 +3,7 @@ data/kg-store.json
 data/kg-summary.md
 data/kg-access.json
 data/kg-viz.html
+data/kg-config.json
 
 # Vault secrets
 data/vault.enc.json

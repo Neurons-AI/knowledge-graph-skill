@@ -11,7 +11,7 @@
  *   node scripts/config.mjs --json               # list all as JSON
  */
 
-import { loadConfig, saveConfig, getConfigValue, setConfigValue, resetConfigValue, listConfig, DEFAULTS, CONFIG_PATH } from '../lib/config.mjs';
+import { loadConfig, saveConfig, getConfigValue, setConfigValue, resetConfigValue, listConfig, getDefaults, CONFIG_PATH } from '../lib/config.mjs';
 import { existsSync, unlinkSync } from 'fs';
 
 const args = process.argv.slice(2);
