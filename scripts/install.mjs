@@ -135,6 +135,15 @@ if (!existsSync(STORE_PATH)) {
   console.log(`⏭️  kg-store.json already exists`);
 }
 
+// ── Step 1b: Ensure default config ──
+const CONFIG_PATH = join(DATA_DIR, 'kg-config.json');
+if (!existsSync(CONFIG_PATH)) {
+  writeFileSync(CONFIG_PATH, '{}\n');
+  console.log(`✅ Created kg-config.json (empty — all defaults)`);
+} else {
+  console.log(`⏭️  kg-config.json already exists`);
+}
+
 // ── Step 2: Generate summary ──
 try {
   const { toKGMLAsync } = await import('../lib/serialize.mjs');
@@ -171,9 +180,17 @@ if (existsSync(AGENT_FILE_PATH)) {
 
 // ── Step 4: Ensure .gitignore ──
 const gitignorePath = join(DATA_DIR, '.gitignore');
+const gitignoreContent = 'vault.enc.json\n.vault-key\nkg-store.json\nkg-summary.md\nkg-access.json\nkg-viz.html\nkg-config.json\n';
 if (!existsSync(gitignorePath)) {
-  writeFileSync(gitignorePath, 'vault.enc.json\n.vault-key\n');
+  writeFileSync(gitignorePath, gitignoreContent);
   console.log(`✅ Created data/.gitignore`);
+} else {
+  // Ensure kg-config.json is in gitignore
+  const existing = readFileSync(gitignorePath, 'utf8');
+  if (!existing.includes('kg-config.json')) {
+    writeFileSync(gitignorePath, existing.trimEnd() + '\nkg-config.json\n');
+    console.log(`✅ Updated data/.gitignore (added kg-config.json)`);
+  }
 }
 
 console.log(`\n🎉 Knowledge Graph skill installed successfully!`);
@@ -287,6 +304,14 @@ node ${s}/scripts/query.mjs traverse <id> --depth 3
 
 **Entity types:** \`human\` \`ai\` \`device\` \`platform\` \`project\` \`decision\` \`concept\` \`skill\` \`network\` \`credential\` \`org\` \`service\` \`place\` \`event\` \`media\` \`product\` \`account\` \`routine\` \`knowledge\`
 **Relations:** \`owns\` \`uses\` \`runs_on\` \`runs\` \`created\` \`related_to\` \`part_of\` \`instance_of\` \`decided\` \`depends_on\` \`connected\` \`manages\` \`likes\` \`dislikes\` \`located_in\` \`knows\` \`member_of\` \`has\`
+
+### Configuration
+\`\`\`bash
+node ${s}/scripts/config.mjs                  # list all settings
+node ${s}/scripts/config.mjs get <key>         # get value (e.g. summary.tokenBudget)
+node ${s}/scripts/config.mjs set <key> <value> # set value
+node ${s}/scripts/config.mjs reset <key>       # reset to default
+\`\`\`
 
 ### Rules
 - **Always add tags** — synonyms, translations, abbreviations for cross-language search

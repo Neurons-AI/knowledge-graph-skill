@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { load } from '../lib/graph.mjs';
+import { loadConfig } from '../lib/config.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -19,6 +20,7 @@ function flag(name) {
 const outputPath = flag('output') || join(__dirname, '..', 'data', 'kg-viz.html');
 
 const store = load();
+const vizConfig = loadConfig().visualization;
 const nodes = Object.values(store.nodes);
 const edges = store.edges;
 
@@ -196,6 +198,7 @@ const html = `<!DOCTYPE html>
 
 <script>
 const DATA = ${graphJSON};
+const VIZ_CONFIG = ${JSON.stringify(vizConfig)};
 
 // ── State ──
 let nodes = DATA.nodes.map(n => ({ ...n, x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null }));
@@ -234,7 +237,7 @@ const CY = () => H() / 2;
 function initPositions() {
   // Place nodes in a wider circle initially so they start more spread out
   const n = nodes.length;
-  const r = Math.min(W(), H()) * 0.45;
+  const r = Math.min(W(), H()) * 0.3 * VIZ_CONFIG.initialSpread;
   nodes.forEach((nd, i) => {
     const angle = (2 * Math.PI * i) / n;
     // Add a bit of randomness to break symmetry
@@ -251,7 +254,7 @@ transform.y = 0;
 
 function simulate() {
   const alpha = 0.3;
-  const baseRepulsion = 5000;
+  const baseRepulsion = VIZ_CONFIG.repulsion;
   const attraction = 0.025;
   const parentAttraction = 0.05;
   const damping = 0.82;
@@ -267,7 +270,7 @@ function simulate() {
       const minDist = a.size + b.size + 20;
       // Stronger repulsion when nodes overlap, normal otherwise
       const repulsion = dist < minDist
-        ? baseRepulsion * 3 / (dist * dist)   // extra push when overlapping
+        ? baseRepulsion * VIZ_CONFIG.overlapPenalty / (dist * dist)
         : baseRepulsion / (dist * dist);
       const fx = (dx / dist) * repulsion;
       const fy = (dy / dist) * repulsion;
@@ -284,7 +287,7 @@ function simulate() {
     const dx = b.x - a.x, dy = b.y - a.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
     // Rest length scales with node sizes
-    const baseLen = e.virtual ? 140 : 180;
+    const baseLen = e.virtual ? VIZ_CONFIG.edgeRestLength - 20 : VIZ_CONFIG.edgeRestLength + 20;
     const targetLen = baseLen + (a.size + b.size) * 0.5;
     const force = (dist - targetLen) * (e.virtual ? parentAttraction : attraction);
     const fx = (dx / dist) * force;
@@ -430,7 +433,7 @@ function draw() {
 
 // ── Animation loop ──
 let simSteps = 0;
-const MAX_SIM = 500;
+const MAX_SIM = VIZ_CONFIG.simulationSteps;
 
 function loop() {
   if (running && simSteps < MAX_SIM) {
@@ -720,7 +723,7 @@ function navigateToNode(n) {
   const startTx = transform.x;
   const startTy = transform.y;
   const startScale = transform.scale;
-  const duration = 400; // ms
+  const duration = VIZ_CONFIG.zoomAnimationMs;
   const startTime = performance.now();
 
   function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }

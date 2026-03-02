@@ -87,6 +87,49 @@ ALWAYS use this script. Do NOT write custom HTML. Output is self-contained, offl
 
 Parent edges render as **blue dashed arrows** (60% opacity). Regular edges are red solid arrows.
 
+## Configuration
+
+All settings have sensible defaults. Override only what you need — config stores only your changes.
+
+```bash
+node scripts/config.mjs                       # list all settings with current values
+node scripts/config.mjs get <key>              # get a value (e.g. summary.tokenBudget)
+node scripts/config.mjs set <key> <value>      # set a value
+node scripts/config.mjs reset <key>            # reset single key to default
+node scripts/config.mjs reset --all            # reset everything
+node scripts/config.mjs --json                 # full config as JSON
+```
+
+### Available Settings
+
+| Section | Key | Default | Description |
+|---------|-----|---------|-------------|
+| **summary** | `tokenBudget` | 5000 | Max tokens for kg-summary.md |
+| | `maxChildDepth` | auto | Tree depth (null=auto: 3/<100, 2/100-400, 1/>400) |
+| | `maxAttrLen` | 40 | Max characters for attribute values |
+| | `maxPerRoot` | 4 | Max relations shown per root subtree |
+| | `compactThreshold` | 400 | Entity count for compact mode |
+| | `mediumThreshold` | 200 | Entity count for medium depth |
+| **validation** | `minEntities` | 30 | Min entities for extraction PASS |
+| | `minRelationRatio` | 0.5 | Relations per entity ratio |
+| | `minDepth` | 3 | Min hierarchy depth for PASS |
+| | `minEvents` | 3 | Min event nodes for PASS |
+| **depthCheck** | `entityCapForEstimate` | 50 | Cap NER count for target estimation |
+| | `minEntitiesMultiplier` | 1.0 | Named entities → min target multiplier |
+| | `extraEntities` | 30 | Added to min for max entity range |
+| **consolidation** | `autoNest` | true | Auto-nest single-relation orphans |
+| | `mergeSuggestions` | true | Suggest merges for similar labels |
+| | `pruneEmptyAttrs` | true | Remove empty/null attrs |
+| | `levenshteinThreshold` | 2 | Max edit distance for merge suggestions |
+| **visualization** | `repulsion` | 5000 | Physics repulsion force |
+| | `edgeRestLength` | 160 | Default edge rest length |
+| | `overlapPenalty` | 3 | Overlap repulsion multiplier |
+| | `simulationSteps` | 500 | Physics simulation iterations |
+| | `initialSpread` | 1.5 | Initial node spread multiplier |
+| | `zoomAnimationMs` | 400 | Zoom-to-node animation duration |
+
+Config file: `data/kg-config.json` (per-agent, gitignored).
+
 ## Cross-Agent Access (read-only)
 
 ```javascript

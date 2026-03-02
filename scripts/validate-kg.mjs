@@ -16,6 +16,7 @@
 import { readFileSync } from 'fs';
 import { createInterface } from 'readline';
 import { load, getChildren, getEdges } from '../lib/graph.mjs';
+import { loadConfig } from '../lib/config.mjs';
 
 // ─── NER: Named Entity Recognition (regex-based) ──────────────────────────
 
@@ -361,10 +362,12 @@ function compareWithKG(store, articleEntities, rootId, articleText) {
 
 function printReport(comparison, jsonMode, fixMode) {
   const c = comparison;
+  const cfg = loadConfig();
+  const vc = cfg.validation; // validation config
 
   if (jsonMode) {
     console.log(JSON.stringify(c, null, 2));
-    return c.totalEntities >= 30;
+    return c.totalEntities >= vc.minEntities;
   }
 
   console.log('');
@@ -380,16 +383,16 @@ function printReport(comparison, jsonMode, fixMode) {
   let failures = 0;
   console.log('  ── Quality Gates ──');
 
-  // 1. Entity count (≥30 for complex articles)
-  if (c.totalEntities < 30) {
-    console.log(`  ❌ Entities: ${c.totalEntities} (need ≥30)`);
+  // 1. Entity count
+  if (c.totalEntities < vc.minEntities) {
+    console.log(`  ❌ Entities: ${c.totalEntities} (need ≥${vc.minEntities})`);
     failures++;
   } else {
     console.log(`  ✅ Entities: ${c.totalEntities}`);
   }
 
-  // 2. Relations — target 1 per 2 entities, min 10
-  const relTarget = Math.max(10, Math.round(c.totalEntities * 0.5));
+  // 2. Relations — configurable ratio, min 10
+  const relTarget = Math.max(10, Math.round(c.totalEntities * vc.minRelationRatio));
   if (c.totalRelations < relTarget) {
     console.log(`  ❌ Relations: ${c.totalRelations} (need ≥${relTarget} — add more cross-links!)`);
     failures++;
@@ -397,17 +400,17 @@ function printReport(comparison, jsonMode, fixMode) {
     console.log(`  ✅ Relations: ${c.totalRelations}`);
   }
 
-  // 3. Hierarchy depth ≥ 3
-  if (c.maxDepth < 3) {
-    console.log(`  ❌ Depth: ${c.maxDepth} (need ≥3 — put mechanisms UNDER domains, entities UNDER mechanisms)`);
+  // 3. Hierarchy depth
+  if (c.maxDepth < vc.minDepth) {
+    console.log(`  ❌ Depth: ${c.maxDepth} (need ≥${vc.minDepth} — put mechanisms UNDER domains, entities UNDER mechanisms)`);
     failures++;
   } else {
     console.log(`  ✅ Depth: ${c.maxDepth}`);
   }
 
-  // 4. Events ≥ 3
-  if (c.eventsInKG < 3) {
-    console.log(`  ❌ Events: ${c.eventsInKG} (need ≥3)`);
+  // 4. Events
+  if (c.eventsInKG < vc.minEvents) {
+    console.log(`  ❌ Events: ${c.eventsInKG} (need ≥${vc.minEvents})`);
     failures++;
   } else {
     console.log(`  ✅ Events: ${c.eventsInKG}`);

@@ -15,6 +15,7 @@
 
 import { readFileSync } from 'fs';
 import { createInterface } from 'readline';
+import { loadConfig } from '../lib/config.mjs';
 
 // ─── Detection Helpers ─────────────────────────────────────────────────────
 
@@ -98,6 +99,9 @@ function score(text) {
 
 function qualityTargets(result, text) {
   if (result.score <= 3) return null;
+  const cfg = loadConfig();
+  const dc = cfg.depthCheck;
+  const vc = cfg.validation;
   const nc = result.namedEntities;
   const datePatterns = [/\bQ[1-4]\s+\d{4}\b/gi, /\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/gi, /\b(?:early|mid|late|end of)\s+\d{4}\b/gi];
   let dateCount = 0;
@@ -105,13 +109,12 @@ function qualityTargets(result, text) {
   const statPatterns = [/\d+\.?\d*\s*%/g, /\$\d[\d,.]*\s*(?:billion|million|trillion|B|M|T)?/gi];
   let statCount = 0;
   for (const p of statPatterns) statCount += (text.match(p) || []).length;
-  // Cap named entities at ~50 to avoid inflated estimates from false positive NER
-  const cappedNc = Math.min(nc, 50);
-  const minEntities = Math.max(30, Math.round(cappedNc * 1.0));
+  const cappedNc = Math.min(nc, dc.entityCapForEstimate);
+  const minEntities = Math.max(vc.minEntities, Math.round(cappedNc * dc.minEntitiesMultiplier));
 
   return {
     minEntities,
-    maxEntities: minEntities + 30,
+    maxEntities: minEntities + dc.extraEntities,
     minDepth: result.depth,
     minEvents: Math.max(3, Math.min(dateCount, 12)),
     minConcepts: Math.max(3, Math.round(result.score * 1.5)),
