@@ -1,0 +1,12 @@
+# KG data (per-agent, not shared)
+data/kg-store.json
+data/kg-summary.md
+data/kg-access.json
+data/kg-viz.html
+
+# Vault secrets
+data/vault.enc.json
+data/.vault-key
+
+# Node
+node_modules/

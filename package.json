@@ -1,0 +1,14 @@
+{
+  "name": "knowledge-graph",
+  "version": "2.0.0",
+  "description": "Embedded knowledge graph skill for AI agents. JSON storage, hybrid search (trigram + BM25), KGML summary format, encrypted vault. Zero external dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["knowledge-graph", "agent-skill", "openclaw", "claude", "gemini"],
+  "scripts": {
+    "install-skill": "node scripts/install.mjs",
+    "summarize": "node scripts/summarize.mjs",
+    "consolidate": "node scripts/consolidate.mjs",
+    "visualize": "node scripts/visualize.mjs"
+  }
+}
